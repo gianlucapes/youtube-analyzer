@@ -35,13 +35,16 @@ async def search_channel_by_name(name: str):
 
 @router.post("/youtubeChannel/")
 def create_person(youtubeChannel: YoutubeChannel):
-    neo4jService.create_entity("""
-    CREATE (c:YoutubeChannel {
-        publishedAt: $publishedAt,
-        channelId: $channelId,
-        title: $title,
-        description: $description,
-        url: $url
-    })
-    """,youtubeChannel.model_dump())
-    return {"msg": "Youtube Channel created", "youtubeChannel": youtubeChannel}
+    try:
+        neo4jService.create_entity("""
+        CREATE (c:YoutubeChannel {
+            publishedAt: $publishedAt,
+            channelId: $channelId,
+            title: $title,
+            description: $description,
+            url: $url
+        })
+        """,youtubeChannel.model_dump())
+        return {"msg": "Youtube Channel created", "youtubeChannel": youtubeChannel}
+    except Exception as e:
+        raise e
