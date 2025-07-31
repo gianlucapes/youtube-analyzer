@@ -1,6 +1,10 @@
 from fastapi import APIRouter
 import requests
-import os
+from config import settings
+from db import neo4jService
+from entities.youtube_channel import YoutubeChannel
+import json
+
 
 router = APIRouter()
 
@@ -10,12 +14,34 @@ async def search_channel_by_name(name: str):
     "part": "snippet",
     "q": name,
     "type": "channel",
-    "key": os.environ.get("API_KEY_YOUTUBE_DEV")
+    "key": settings.API_KEY_YOUTUBE_DEV
     }
     url = "https://www.googleapis.com/youtube/v3/search"
     try:
         response = requests.get(url, params=params)
-        return {"message": response.json()["items"]}
+        channels=[]
+        channel={}
+        for item in response.json()["items"]:
+            channel["channelId"] = item["id"]["channelId"]
+            channel["publishedAt"] = item["snippet"]["publishedAt"]
+            channel["title"] = item["snippet"]["title"]
+            channel["description"]  = item["snippet"]["description"]
+            channel["url"]  = item["snippet"]["thumbnails"]["high"]["url"]
+            channels.append(channel)
+            channel={}
+        return [YoutubeChannel(**item) for item in channels]
     except Exception as e:
         raise e
 
+@router.post("/youtubeChannel/")
+def create_person(youtubeChannel: YoutubeChannel):
+    neo4jService.create_entity("""
+    CREATE (c:YoutubeChannel {
+        publishedAt: $publishedAt,
+        channelId: $channelId,
+        title: $title,
+        description: $description,
+        url: $url
+    })
+    """,youtubeChannel.model_dump())
+    return {"msg": "Youtube Channel created", "youtubeChannel": youtubeChannel}
