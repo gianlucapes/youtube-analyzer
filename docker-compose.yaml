@@ -5,6 +5,8 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
+    env_file:
+      - .env
     restart: always
 
   neo4j:

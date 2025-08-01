@@ -2,18 +2,20 @@ from fastapi import APIRouter
 import requests
 from config import settings
 from db import neo4jService
-from entities.youtube_channel import YoutubeChannel
+from entities.video import Video
 import json
 
 
 router = APIRouter()
 
-@router.get("/youtubeChannel/search",tags=["youtube channel"])
-async def search_channel_by_name(name: str):
+@router.get("/video/search",tags=["videos"])
+async def search_video_by_name(channelId: str,max_results : int = 5):
     params = {
-    "part": "snippet",
-    "q": name,
-    "type": "channel",
+    "part": "snippet,id",
+    "channelId":channelId,
+    "maxResults":max_results,
+    "order":"date",
+    "type": "video",
     "key": settings.API_KEY_YOUTUBE_DEV
     }
     url = "https://www.googleapis.com/youtube/v3/search"
@@ -22,29 +24,29 @@ async def search_channel_by_name(name: str):
         channels=[]
         channel={}
         for item in response.json()["items"]:
-            channel["channelId"] = item["id"]["channelId"]
+            channel["videoId"] = item["id"]["videoId"]
             channel["publishedAt"] = item["snippet"]["publishedAt"]
             channel["title"] = item["snippet"]["title"]
             channel["description"]  = item["snippet"]["description"]
-            channel["url"]  = item["snippet"]["thumbnails"]["high"]["url"]
+            channel["thumb_url"]  = item["snippet"]["thumbnails"]["high"]["url"]
             channels.append(channel)
             channel={}
-        return [YoutubeChannel(**item) for item in channels]
+        return [Video(**item) for item in channels]
     except Exception as e:
         raise e
 
-@router.post("/youtubeChannel/insert",tags=["youtube channel"])
-def insert_youtube_channel(youtubeChannel: YoutubeChannel):
+@router.post("/video/insert",tags=["video"])
+def insert_video(video: Video):
     try:
         neo4jService.create_entity("""
-        CREATE (c:YoutubeChannel {
+        MERGE (c:Video {
             publishedAt: $publishedAt,
-            channelId: $channelId,
+            videoId: $channelId,
             title: $title,
             description: $description,
-            url: $url
+            thumb_url: $thumb_url
         })
-        """,youtubeChannel.model_dump())
-        return {"msg": "Youtube Channel created", "youtubeChannel": youtubeChannel}
+        """,video.model_dump())
+        return {"msg": "Video node created", "video": video}
     except Exception as e:
         raise e
