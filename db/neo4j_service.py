@@ -5,9 +5,14 @@ class Neo4jService:
     def close(self):
         self.driver.close()
 
-    def create_entity(self, query:str,kwargs:dict):
+    def run_query(self, query:str,kwargs:dict=None):
         with self.driver.session() as session:
-            session.run(
-                query,
-                **kwargs
-            )
+            if kwargs:
+                session.run(
+                    query,
+                    **kwargs
+                )
+            else:
+                session.run(
+                    query
+                )

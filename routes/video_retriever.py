@@ -8,7 +8,7 @@ import json
 
 router = APIRouter()
 
-@router.get("/video/search",tags=["videos"])
+@router.get("/video/search",tags=["video"])
 async def search_video_by_name(channelId: str,max_results : int = 5):
     params = {
     "part": "snippet,id",
@@ -21,27 +21,28 @@ async def search_video_by_name(channelId: str,max_results : int = 5):
     url = "https://www.googleapis.com/youtube/v3/search"
     try:
         response = requests.get(url, params=params)
-        channels=[]
-        channel={}
+        videos=[]
+        video={}
         for item in response.json()["items"]:
-            channel["videoId"] = item["id"]["videoId"]
-            channel["publishedAt"] = item["snippet"]["publishedAt"]
-            channel["title"] = item["snippet"]["title"]
-            channel["description"]  = item["snippet"]["description"]
-            channel["thumb_url"]  = item["snippet"]["thumbnails"]["high"]["url"]
-            channels.append(channel)
-            channel={}
-        return [Video(**item) for item in channels]
+            video["videoId"] = item["id"]["videoId"]
+            video["publishedAt"] = item["snippet"]["publishedAt"]
+            video["title"] = item["snippet"]["title"]
+            video["description"]  = item["snippet"]["description"]
+            video["thumb_url"]  = item["snippet"]["thumbnails"]["high"]["url"]
+            videos.append(video)
+            video={}
+        return [Video(**item) for item in videos]
     except Exception as e:
         raise e
 
 @router.post("/video/insert",tags=["video"])
 def insert_video(video: Video):
     try:
-        neo4jService.create_entity("""
+        print("insert")
+        neo4jService.run_query("""
         MERGE (c:Video {
             publishedAt: $publishedAt,
-            videoId: $channelId,
+            videoId: $videoId,
             title: $title,
             description: $description,
             thumb_url: $thumb_url

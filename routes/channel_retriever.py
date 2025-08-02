@@ -36,8 +36,8 @@ async def search_channel_by_name(name: str):
 @router.post("/youtubeChannel/insert",tags=["youtube channel"])
 def insert_youtube_channel(youtubeChannel: YoutubeChannel):
     try:
-        neo4jService.create_entity("""
-        CREATE (c:YoutubeChannel {
+        neo4jService.run_query("""
+        MERGE (c:YoutubeChannel {
             publishedAt: $publishedAt,
             channelId: $channelId,
             title: $title,

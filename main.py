@@ -3,6 +3,8 @@ from pydantic import BaseModel
 from typing import Dict
 from routes.channel_retriever import router as channel_search_router
 from routes.video_retriever import router as video_router
+from routes.relationships import router as relation_router
+from routes.comments_retriever import router as comment_router
 from contextlib import asynccontextmanager
 
 app = FastAPI()
@@ -17,3 +19,4 @@ async def lifespan(app: FastAPI):
 
 app.include_router(channel_search_router)
 app.include_router(video_router)
+app.include_router(comment_router)
