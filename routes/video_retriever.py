@@ -38,7 +38,6 @@ async def search_video_by_name(channelId: str,max_results : int = 5):
 @router.post("/video/insert",tags=["video"])
 def insert_video(video: Video):
     try:
-        print("insert")
         neo4jService.run_query("""
         MERGE (c:Video {
             publishedAt: $publishedAt,

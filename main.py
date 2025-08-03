@@ -20,3 +20,4 @@ async def lifespan(app: FastAPI):
 app.include_router(channel_search_router)
 app.include_router(video_router)
 app.include_router(comment_router)
+app.include_router(relation_router)
