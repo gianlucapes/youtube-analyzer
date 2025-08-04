@@ -36,17 +36,23 @@ async def search_video_by_name(channelId: str,max_results : int = 5):
         raise e
 
 @router.post("/video/insert",tags=["video"])
-def insert_video(video: Video):
+def insert_video(videos: list[Video],channelId:str):
     try:
-        neo4jService.run_query("""
-        MERGE (c:Video {
-            publishedAt: $publishedAt,
-            videoId: $videoId,
-            title: $title,
-            description: $description,
-            thumb_url: $thumb_url
-        })
-        """,video.model_dump())
-        return {"msg": "Video node created", "video": video}
+        list_of_entities=[comment.model_dump() for comment in videos]
+
+        neo4jService.run_query_for_videos(query = """
+        UNWIND $list_of_entities AS v
+        MERGE (video:Video { videoId: v.videoId })
+        ON CREATE SET
+            video.publishedAt = v.publishedAt,
+            video.channelId = $channelId,
+            video.title = v.title,
+            video.description = v.description,
+            video.thumb_url = v.thumb_url
+        MERGE (channel:YoutubeChannel { channelId: $channelId })
+        MERGE (video)-[:UPLOADED_BY]->(channel)
+        """,list_of_entities=list_of_entities,
+        channelId=channelId)
+        return {"msg": "Videos nodes created", "videos": list_of_entities}
     except Exception as e:
         raise e

@@ -4,22 +4,27 @@ class Neo4jService:
 
     def close(self):
         self.driver.close()
-
-    def run_query(self, query:str,kwargs:dict=None,list_of_entities:list=None):
+    
+    def run_query_for_videos(self,query,list_of_entities:dict,channelId:str):
         with self.driver.session() as session:
-            if not kwargs and not list_of_entities:
-                session.run(
-                    query
-                )
-                
-            elif kwargs:
-                session.run(
-                    query,
-                    **kwargs
-                )
-            elif list_of_entities:
-                session.run(
-                    query,
-                    {"list_of_entities": list_of_entities}
-                )
+            result = session.run(query,
+                    {"list_of_entities": list_of_entities,
+                     "channelId": channelId
+                    })
+            for res in result:
+                print(res)
+
+    def run_query(self, query: str, kwargs: dict = None, list_of_entities: list = None):
+        parameters = {}
+
+        if kwargs:
+            parameters.update(kwargs)
+        if list_of_entities:
+            parameters["list_of_entities"] = list_of_entities
+
+        with self.driver.session() as session:
+            if parameters:
+                session.run(query, parameters)
+            else:
+                session.run(query)
     
