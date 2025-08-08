@@ -1,6 +1,7 @@
 services:
   fastapi_app:
     build: .
+    container_name: youtube_analyzer
     ports:
       - "8000:8000"
     volumes:
@@ -8,6 +9,8 @@ services:
     env_file:
       - .env
     restart: always
+    networks:
+      - youtube_network
 
   neo4j:
     image: neo4j:community
@@ -22,3 +25,9 @@ services:
       - ./.neo4jdb/conf:/conf
       - ./.neo4jdb/logs:/logs
     restart: unless-stopped
+    networks:
+      - youtube_network
+
+networks:
+  youtube_network:
+    driver: bridge
